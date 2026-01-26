@@ -1,5 +1,6 @@
 import nltk
 import numpy as np
+import json
 from tensorflow import keras
 from tensorflow.keras import layers
 
@@ -15,7 +16,6 @@ except LookupError:
 from nltk.corpus import treebank
 
 # Préparer les données
-
 sentences = [[w.lower() for w in sent] for sent in treebank.sents()]
 all_sentences = [" ".join(sent) for sent in sentences]
 
@@ -55,9 +55,14 @@ temp_model.compile(
 )
 
 temp_model.fit(X_encoded, y_encoded, epochs=15, batch_size=128, verbose=1)
-# juste prendre embedding
+
 embedding_layer = temp_model.layers[0]
 embedding_model = keras.Sequential([embedding_layer])
-
 embedding_model.save('models/embedding.keras')
+
+tokenizer_json = tokenizer.to_json()
+with open('models/tokenizer.json', 'w') as f:
+    json.dump(tokenizer_json, f)
+
 print(f"Embedding sauvegardé : vocab_size={vocab_size}, embed_dim={embed_dim}")
+print(f"Tokenizer sauvegardé")
