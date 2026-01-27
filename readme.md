@@ -12,7 +12,7 @@ We start from the fundamentals of the recurrent neural network and progressively
 1. **Word extension with RNN**
   i. Recurrent Neural Network (RNN)
   ii. How to turn words in vectors (Embeddings)
-  iii bigram and trigram
+  iii Word Extension (bigram and trigram...)
 2. **How to remember things in our sentences**
   i. Our first sentences with RNN
   ii. LSTM and GRU to have more context
@@ -86,4 +86,133 @@ RNN provides dynamic contextual understanding based on the sequence of words in 
 The Key Distinction
 Embeddings alone cannot understand that "bank" means something different in "river bank" versus "savings bank", they assign the same vector regardless of context. The RNN solves this by analyzing the surrounding words and previous words in the sequence.
 
-#### Lets make our Embdedding
+#### Let's Make Our Embedding
+
+To train the embedding, we need to prepare the data from the treebank corpus. Here's what happens at each step:
+
+1. **Normalize the text** by
+preventing the model from treating the same word differently based on capitalization, which would waste embedding capacity.
+2. **Create a string representation** from the array representation
+Convert each sentence from a list of words to a single string. This is needed for the tokenizer's fit_on_texts() method, which expects string inputs.
+3. **Create the tokenizer** with unknown word handling
+We also add <eos> (end-of-sentence) markers to mark sentence boundaries. vocab_size is the total number of unique words including special tokens.
+4. **Create training sequences**
+This creates a next-word-prediction task that forces the embedding to capture meaningful relationships between words.
+5. **Convert words to token IDs**
+The tokenizer converts each word string to its corresponding integer ID. Unknown words are mapped to the <unk> token ID. Now X_encoded and y_encoded are numerical arrays ready for training the neural network.
+
+**Training the Embedding**
+
+We build a simple model to train embeddings through next-word prediction:
+
+>pythonlayers.Embedding(input_dim=vocab_size, output_dim=embed_dim, input_length=window_size)
+
+How it works: The embedding converts tokens to vectors → Flatten concatenates them → Dense predicts the next word.
+During backpropagation, gradients adjust the embedding vectors to predict correctly. Similar words (like "dog" and "cat") develop similar vectors because they appear in similar contexts. After training, we keep only the Embedding layer for reuse.
+
+### Word Extension (Bigrams, Trigrams, ...)
+
+Let us explain how we build word extension models (also known as *n-gram language models*).
+
+The main idea is to estimate the probability of the next word given the previous ones.
+
+For example, if we want to know how likely the word "am" follows "I", we are interested in the conditional probability:
+
+\[
+P(\text{am} \mid \text{I})
+\]
+
+More generally, let a sentence be a sequence of tokens:
+
+\[
+E_{1:n} = (e_1, e_2, \dots, e_n)
+\]
+
+Using the chain rule of probability, the joint probability of the sequence is:
+
+\[
+P(E_{1:n} = e_{1:n}) = \prod_{t=1}^{n} P(e_t \mid e_{1:t-1})
+\]
+
+This formulation is exact but impractical, since conditioning on all previous words quickly becomes infeasible.
+
+#### Bigram model
+
+In a bigram model, we approximate:
+
+\[
+P(e_t \mid e_{1:t-1}) \approx P(e_t \mid e_{t-1})
+\]
+
+Thus, the probability of a full sequence becomes:
+
+\[
+P(E_{1:n}) \approx \prod_{t=1}^{n} P(e_t \mid e_{t-1})
+\]
+
+This means that:
+- The text is split into words (or tokens).
+- To predict word \(t\), we only need to know word \(t-1\).
+
+Since a bigram model only requires one previous word, it does not require memory like RNNs.
+
+We can therefore use:
+- an embedding layer to represent the previous word
+- followed by a simple MLP (fully connected network) to predict the next word
+
+This shows that our previous architecture (Embedding + MLP) is already sufficient. We only need to adapt how we train and evaluate the model.
+
+Word prediction is a multi-class classification problem, where, the input is the previous word andthe output is a probability distribution over the vocabulary
+
+Therefore, cross-entropy loss is the appropriate loss function. However the way to compute the accuracy is not the same 
+
+**Our new accuracy: Perplexity**
+
+Accuracy usually measures the percentage of correct predictions. However, in the context of language modeling, this metric can be misleading.
+
+For example, suppose the model predicts the word "eat" after "I", while the correct word is "am". Standard accuracy would assign:
+
+- accuracy = 0.0
+
+Yet, if the predicted probabilities were:
+- \(P(\text{"eat"}) = 0.38\)
+- \(P(\text{"am"}) = 0.36\)
+
+then the model is clearly not far from the correct answer, even though it missed it.
+
+Perplexity captures this intuition by measuring how surprised the model is by the correct word, rather than whether it guessed it exactly.
+
+Perplexity is derived from the cross-entropy loss and evaluates the quality of the entire predicted probability distribution.
+
+Given a sequence of \(N\) tokens, perplexity is defined as:
+
+\[
+\text{Perplexity} = \exp\left( - \frac{1}{N} \sum_{t=1}^{N} \log P(e_t \mid \text{context}) \right)
+\]
+
+In our case, \(P(e_t \mid \text{context})\) represents the probability of word \(e_t\) given the context (in a bigram model, the previous word).
+
+Instead of multiplying these probabilities directly, we take the log of each probability and then sum them:
+
+This is done for two reasons:
+
+1. **Numerical stability:** multiplying many small probabilities tends to underflow to 0.
+2. **Stronger penalty for mistakes:** the log function strongly penalizes low-probability (confidently wrong) predictions.
+
+Next, we compute the average by dividing by \(N\), the number of tokens:
+
+Finally, we take the exponential to convert back from the log scale:
+
+This gives us a more interpretable metric, where lower values indicate that the model is less surprised by the true words.
+
+In practice:
+- We train the model using cross-entropy loss
+- We report perplexity*as the main evaluation metric for word extension models
+
+**ours model**
+
+We built a model which turns the words wich apperas less than 5 times in "unk" and we train our model.
+
+Our results seem very good the perplexity is at 107 for a bigram it's not bad but when we try to see the prediction of some words we understand
+![presence of unkown as first choice](ressources/unkbigramme.png)
+We choose everytime unkown as first choice because there is not enough words in our corpus. In this case we have to sacrifice our performance by accepting words with less appearance to prevent the "unk" from beign the first choice.
