@@ -49,7 +49,7 @@ Where:
 - `W_o` and `b_o` are the output layer's weights and bias
 
 Memory Through Time :
-Basically, we can see in the equation $(et+1⋅St)(e_{t+1} \cdot S_t)$ and especially $(et+1​⋅St​)$ that the output is mixed with the new input. This means the neuron is supposed to remember what happened in the past.
+Basically, we can see in the equation $(e\_{t+1}⋅St)(e\_{t+1} \cdot S\_t)$ and especially $(e_{t+1}​⋅St​)$ that the output is mixed with the new input. This means the neuron is supposed to remember what happened in the past.
 
 For instance, if we analyze a sentence word by word, at the second word we mix the output (which analyzed the first word) with the input of the second word. This is clearly better to understand a sentence, as we carry forward the context from previous words.
 In this way, we can visualize the neuron through time by connecting it on a timeline, like in the right side of the image. We clearly see the equation has two inputs: the new one from the corpus and the output of the last sequence. This recurrent connection allows the network to maintain information about previous inputs and use it to process current ones.
@@ -209,10 +209,16 @@ In practice:
 - We train the model using cross-entropy loss
 - We report perplexity*as the main evaluation metric for word extension models
 
-**ours model**
+**our model**
 
-We built a model which turns the words wich apperas less than 5 times in "unk" and we train our model.
+We built a model where all words appearing fewer than 5 times in the corpus are replaced by the `<unk>` token, and then trained our bigram model on this modified vocabulary.
 
-Our results seem very good the perplexity is at 107 for a bigram it's not bad but when we try to see the prediction of some words we understand
-![presence of unkown as first choice](ressources/unkbigramme.png)
-We choose everytime unkown as first choice because there is not enough words in our corpus. In this case we have to sacrifice our performance by accepting words with less appearance to prevent the "unk" from beign the first choice.
+The results initially seem encouraging: the perplexity reaches 107, which is reasonable for a bigram model. However, when we inspect the model’s predictions more closely, a clear issue appears.
+
+![Presence of `<unk>` as first choice](ressources/unkbigramme.png)
+
+The model frequently predicts `<unk>` as its top choice, because there is not enough words in our vocabulary. This happens because the corpus does not contain enough distinct words, causing `<unk>` to absorb a large portion of the probability mass.
+
+As a result, even though the perplexity is low, the predictions are not meaningful.
+
+To address this problem, we must sacrifice some perplexity by allowing rarer words to remain in the vocabulary. Accepting words with fewer occurrences reduces the dominance of the `<unk>` token and leads to more realistic predictions.
