@@ -1,99 +1,76 @@
 import nltk
 import numpy as np
 from tensorflow import keras
-from keras.models import load_model
 import pickle
+from collections import Counter
 
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
-try:
-    nltk.data.find('corpora/treebank')
-except LookupError:
-    nltk.download('treebank')
-
+nltk.download('treebank')
 from nltk.corpus import treebank
 
-model = load_model('../models/bigram.keras')
+model = keras.models.load_model('../models/bigram.keras')
+with open('../models/vocab.pkl', 'rb') as f:
+    vocab = pickle.load(f)
 
-with open('../models/tokenizer.pkl', 'rb') as f:
-    tokenizer = pickle.load(f)
-
-vocab_size = len(tokenizer.word_index) + 1
-reverse_index = {v: k for k, v in tokenizer.word_index.items()}
+reverse_vocab = {v: k for k, v in vocab.items()}
+unk_idx = 0
 
 def predict_next(word, top_k=5):
     word = word.lower()
-    idx = tokenizer.word_index.get(word, tokenizer.word_index["<unk>"])
+    word_idx = vocab.get(word, unk_idx)
     
-    logits = model.predict(np.array([[idx]]), verbose=0)
-    
+    logits = model.predict(np.array([[word_idx]]), verbose=0)
     probs = keras.activations.softmax(logits[0]).numpy()
     
     top_indices = np.argsort(probs)[-top_k:][::-1]
-    
     results = []
     for pred_idx in top_indices:
-        word_pred = reverse_index.get(pred_idx, "<unk>")
+        pred_word = reverse_vocab.get(pred_idx, "<unk>")
         prob = probs[pred_idx]
-        results.append((word_pred, prob))
+        results.append((pred_word, prob))
     
     return results
 
-print("\n" + "="*50)
 print("TESTS DE PRÉDICTION")
-print("="*50)
 
 test_words = ['the', 'i', 'is', 'and', 'to', 'of']
-
 for word in test_words:
     predictions = predict_next(word, top_k=5)
-    print(f"\n'{word}'Top 5 prédictions:")
+    print(f"\n'{word}' Top 5 prédictions:")
     for i, (pred_word, prob) in enumerate(predictions, 1):
         print(f"  {i}. {pred_word:15s} (prob: {prob:.4f})")
 
-print("\n" + "="*50)
+print("\n")
 print("ÉVALUATION SUR TEST SET")
-print("="*50)
 
 sentences = [[w.lower() for w in sent] for sent in treebank.sents()]
-from collections import Counter
+
 word_counts = Counter()
 for sent in sentences:
     word_counts.update(sent)
 
-MIN_FREQ = 4
-filtered_sentences = []
-for sent in sentences:
-    filtered_sent = [w if word_counts[w] >= MIN_FREQ else "<unk>" for w in sent]
-    filtered_sentences.append(filtered_sent)
+vocab_size = len(vocab) + 1
 
-train_size = int(0.9 * len(filtered_sentences))
-test_sents = filtered_sentences[train_size:]
+# Split train/test
+train_size = int(0.9 * len(sentences))
+test_sents = sentences[train_size:]
 
-X_test_words = []
-y_test_words = []
+X_test = []
+y_test = []
 
 for sent in test_sents:
     sent_with_eos = sent + ["<eos>"]
     for i in range(len(sent_with_eos) - 1):
-        X_test_words.append([sent_with_eos[i]])  
-        y_test_words.append(sent_with_eos[i + 1])
+        word_idx = vocab.get(sent_with_eos[i], unk_idx)
+        X_test.append(word_idx)
+        next_word_idx = vocab.get(sent_with_eos[i + 1], unk_idx)
+        y_test.append(next_word_idx)
 
-def encode_sequence(seq):
-    return [tokenizer.word_index.get(w, tokenizer.word_index[tokenizer.oov_token]) 
-            for w in seq]
+X_test = np.array(X_test)
+y_test = np.array(y_test)
 
-X_test_encoded = np.array([encode_sequence(seq) for seq in X_test_words])
-y_test_encoded = np.array([tokenizer.word_index.get(w, tokenizer.word_index[tokenizer.oov_token]) 
-                           for w in y_test_words])
-
-print(f"Nombre d'exemples test : {len(X_test_encoded)}")
-
-test_loss, test_acc = model.evaluate(X_test_encoded, y_test_encoded, verbose=0)
+# Évaluer
+test_loss = model.evaluate(X_test, y_test, verbose=0)
 test_perplexity = np.exp(test_loss)
 
 print(f"\nTest Loss : {test_loss:.4f}")
-print(f"Test Accuracy : {test_acc:.4f}")
 print(f"Test Perplexité : {test_perplexity:.2f}")

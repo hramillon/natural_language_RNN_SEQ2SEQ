@@ -40,7 +40,7 @@ embed_dim = 50
 
 model = keras.Sequential([
     keras.layers.Embedding(input_dim=vocab_size, output_dim=embed_dim, input_length=2),
-    keras.layers.Flatten(),
+    keras.layers.SimpleRNN(128),
     keras.layers.Dense(vocab_size)
 ])
 
@@ -49,8 +49,7 @@ model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 )
 
-# Entraînement
-history = model.fit(X_encoded, y_encoded, epochs=10, batch_size=128, verbose=1)
+history = model.fit(X_encoded, y_encoded, epochs=10, batch_size=64, verbose=1)
 
 # Calculer la perplexité
 split_idx = int(len(X_encoded) * 0.95)
@@ -70,22 +69,4 @@ test_perplexity = np.exp(test_loss)
 print(f"Train Perplexité : {train_perplexity:.2f}")
 print(f"Test Perplexité : {test_perplexity:.2f}")
 
-reverse_index = {v: k for k, v in tokenizer.word_index.items()}
-
-def predict_next(word1, word2):
-    word1 = word1.lower()
-    word2 = word2.lower()
-    
-    idx1 = tokenizer.word_index.get(word1, tokenizer.word_index[tokenizer.oov_token])
-    idx2 = tokenizer.word_index.get(word2, tokenizer.word_index[tokenizer.oov_token])
-    
-    logits = model.predict(np.array([[idx1, idx2]]), verbose=0)
-    pred_idx = np.argmax(logits)
-    
-    return reverse_index.get(pred_idx, "<unk>")
-
-# Exemples de prédiction
-print("\nPrédictions trigramme :")
-print("I am →", predict_next("i", "am"))
-print("you are →", predict_next("you", "are"))
-print("he is →", predict_next("he", "is"))
+model.save('models/trigram3.keras')
