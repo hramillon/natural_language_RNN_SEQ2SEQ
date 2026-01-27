@@ -1,4 +1,4 @@
-# Image recognition with MLP and CNN
+# Translation and natural languages with RNN and SEQ2SEQ
 
 The goal is to understand how we can compute natural language with deep learning.
 To do that we have to use Recurrent Neural Network.
@@ -13,7 +13,7 @@ We start from the fundamentals of the recurrent neural network and progressively
   i. Recurrent Neural Network (RNN)
   ii. How to turn words in vectors (Embeddings)
   iii Word Extension (bigram and trigram...)
-2. **How to remember things in our sentences**
+2. **Generate sentences, how to remember things in our sentences**
   i. Our first sentences with RNN
   ii. LSTM and GRU to have more context
 3. **Translation with seq2seq**
@@ -34,11 +34,11 @@ A recurrent neuron (shown on the left of the image) has a self-loop that feeds i
 Mathematically, this is expressed as:
 
 $$
-S\_0 = o
-
-S\_{t+1} = ρ((e\_{t+1} · S\_t) W\_r + b\_r)
-
+\begin{aligned}
+S\_0 = o \\
+S\_{t+1} = ρ((e\_{t+1} · S\_t) W\_r + b\_r) \\
 o = S\_{t+1} W\_o + b\_o
+\end{aligned}
 $$
 
 Where:
@@ -190,7 +190,7 @@ $$
 \text{Perplexity} = \exp\left( - \frac{1}{N} \sum\_{t=1}^{N} \log P(e\_t \mid \text{context}) \right)
 $$
 
-In our case, $P(e_t \mid \text{context})$ represents the probability of word $e_t$ given the context (in a bigram model, the previous word).
+In our case, $P(e\_t \mid \text{context})$ represents the probability of word $e_t$ given the context (in a bigram model, the previous word).
 
 Instead of multiplying these probabilities directly, we take the log of each probability and then sum them:
 
@@ -213,6 +213,8 @@ In practice:
 
 We built a model where all words appearing fewer than 5 times in the corpus are replaced by the `<unk>` token, and then trained our bigram model on this modified vocabulary.
 
+![first model bigram](ressources/perplexForBigram1.png)
+
 The results initially seem encouraging: the perplexity reaches 107, which is reasonable for a bigram model. However, when we inspect the model’s predictions more closely, a clear issue appears.
 
 ![Presence of `<unk>` as first choice](ressources/unkbigramme.png)
@@ -221,4 +223,64 @@ The model frequently predicts `<unk>` as its top choice, because there is not en
 
 As a result, even though the perplexity is low, the predictions are not meaningful.
 
-To address this problem, we must sacrifice some perplexity by allowing rarer words to remain in the vocabulary. Accepting words with fewer occurrences reduces the dominance of the `<unk>` token and leads to more realistic predictions.
+To address this problem, we must sacrifice some perplexity by allowing rarer words to remain in the vocabulary.
+
+**results**
+
+In this final model we changed some things. Effectively the overfitting was very high after the second epoch, thus we decrease the complexity of the model bydecreasing the dimension of the embedding and the size of the layer dense. furthermore we ad a dropout to prevent the overfitting.
+
+![perplexity second model](ressources/perplexiteBigramme.png)
+
+![a prediction for our bigram](ressources/predBigram.png)
+
+#### Trigram Model
+
+The trigram model extends the bigram approach by conditioning the next word on the two previous words instead of just one.
+
+$$
+P(e\_t \mid e\_{1:t-1}) \approx P(e\_t \mid e\_{t-2}, e\_{t-1})
+$$
+
+As a result, the probability of a full sequence is approximated by:
+
+$$
+P(E\_{1:n}) \approx \prod\_{t=1}^{n} P(e\_t \mid e\_{t-2}, e\_{t-1})
+$$
+
+Compared to the bigram model, this introduces an important architectural change. Since the prediction now depends on multiple previous words, the model must retain information about earlier tokens.
+
+To handle this dependency, we use a Recurrent Neural Network (RNN), which allows the model to maintain a memory of past words and capture sequential context.
+
+**Results**
+
+Better results with a very good perplexity even in test. it's a good news for the next step, generating our first sentences.
+
+![perplexity trigram model](ressources/perplexityTrigram.png)
+
+![a prediction for our trigram](ressources/trigramPred.png)
+
+### Generate sentences, how to remember things in our sentences
+
+#### Our First Generated Sentences
+
+We now have a model capable of predicting the next word based on the two previous words. Using this model, we can generate complete sentences by feeding the RNN with an initial sequence and then repeatedly predicting the next word based on the words it has just generated.
+
+In this setting, the model’s own predictions are used as input for subsequent steps, allowing the sentence to grow word by word.
+
+However, as observed in practice, a standard RNN struggles to retain information over longer sequences. Its memory of earlier words quickly degrades, which limits the coherence of the generated sentences.
+
+To address this limitation, we introduce more advanced architectures with improved memory capabilities, which allow the model to better capture long-range dependencies.
+
+#### LSTM and GRU
+
+**LSTM**
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/3/3b/The_LSTM_cell.png" width="500" alt="LSTM cell">
+
+it seems complicated,let's exactly see what we have here. On the left the top input $c\_{t-1}$ is the long time memory on the bottom $h\_{t-1}$ is the short time memory, and finaly $x\_t$ is the value we add at time t.
+
+If we start from the left we see that the short term memory and the new wordare mixed in the logisticfunciton (velue between 0 and 1) thus by multipling this output with the long term memory we 
+
+**GRU**
+
+![GRU cell](https://d2l.ai/_images/gru-3.svg)
