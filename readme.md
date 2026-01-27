@@ -33,13 +33,13 @@ A recurrent neuron (shown on the left of the image) has a self-loop that feeds i
 
 Mathematically, this is expressed as:
 
-```
-S_0 = o
+$$
+S\_0 = o
 
-S_{t+1} = ρ((e_{t+1} · S_t) W_r + b_r)
+S\_{t+1} = ρ((e\_{t+1} · S\_t) W\_r + b\_r)
 
-o = S_{t+1} W_o + b_o
-```
+o = S\_{t+1} W\_o + b\_o
+$$
 
 Where:
 - `S_t` is the output at state at time `t`
@@ -118,21 +118,21 @@ The main idea is to estimate the probability of the next word given the previous
 
 For example, if we want to know how likely the word "am" follows "I", we are interested in the conditional probability:
 
-\[
+$$
 P(\text{am} \mid \text{I})
-\]
+$$
 
 More generally, let a sentence be a sequence of tokens:
 
-\[
-E_{1:n} = (e_1, e_2, \dots, e_n)
-\]
+$$
+E\_{1:n} = (e\_1, e\_2, \dots, e_n)
+$$
 
 Using the chain rule of probability, the joint probability of the sequence is:
 
-\[
-P(E_{1:n} = e_{1:n}) = \prod_{t=1}^{n} P(e_t \mid e_{1:t-1})
-\]
+$$
+P(E\_{1:n} = e\_{1:n}) = \prod\_{t=1}^{n} P(e\_t \mid e\_{1:t-1})
+$$
 
 This formulation is exact but impractical, since conditioning on all previous words quickly becomes infeasible.
 
@@ -140,19 +140,19 @@ This formulation is exact but impractical, since conditioning on all previous wo
 
 In a bigram model, we approximate:
 
-\[
-P(e_t \mid e_{1:t-1}) \approx P(e_t \mid e_{t-1})
-\]
+$$
+P(e\_t \mid e\_{1:t-1}) \approx P(e\_t \mid e\_{t-1})
+$$
 
 Thus, the probability of a full sequence becomes:
 
-\[
-P(E_{1:n}) \approx \prod_{t=1}^{n} P(e_t \mid e_{t-1})
-\]
+$$
+P(E\_{1:n}) \approx \prod\_{t=1}^{n} P(e\_t \mid e\_{t-1})
+$$
 
 This means that:
 - The text is split into words (or tokens).
-- To predict word \(t\), we only need to know word \(t-1\).
+- To predict word $t$, we only need to know word $t-1$.
 
 Since a bigram model only requires one previous word, it does not require memory like RNNs.
 
@@ -175,8 +175,8 @@ For example, suppose the model predicts the word "eat" after "I", while the corr
 - accuracy = 0.0
 
 Yet, if the predicted probabilities were:
-- \(P(\text{"eat"}) = 0.38\)
-- \(P(\text{"am"}) = 0.36\)
+- $P(\text{"eat"}) = 0.38$
+- $P(\text{"am"}) = 0.36$
 
 then the model is clearly not far from the correct answer, even though it missed it.
 
@@ -184,13 +184,13 @@ Perplexity captures this intuition by measuring how surprised the model is by th
 
 Perplexity is derived from the cross-entropy loss and evaluates the quality of the entire predicted probability distribution.
 
-Given a sequence of \(N\) tokens, perplexity is defined as:
+Given a sequence of N tokens, perplexity is defined as:
 
-\[
-\text{Perplexity} = \exp\left( - \frac{1}{N} \sum_{t=1}^{N} \log P(e_t \mid \text{context}) \right)
-\]
+$$
+\text{Perplexity} = \exp\left( - \frac{1}{N} \sum\_{t=1}^{N} \log P(e\_t \mid \text{context}) \right)
+$$
 
-In our case, \(P(e_t \mid \text{context})\) represents the probability of word \(e_t\) given the context (in a bigram model, the previous word).
+In our case, $P(e_t \mid \text{context})$ represents the probability of word $e_t$ given the context (in a bigram model, the previous word).
 
 Instead of multiplying these probabilities directly, we take the log of each probability and then sum them:
 
@@ -199,7 +199,7 @@ This is done for two reasons:
 1. **Numerical stability:** multiplying many small probabilities tends to underflow to 0.
 2. **Stronger penalty for mistakes:** the log function strongly penalizes low-probability (confidently wrong) predictions.
 
-Next, we compute the average by dividing by \(N\), the number of tokens:
+Next, we compute the average by dividing by N, the number of tokens:
 
 Finally, we take the exponential to convert back from the log scale:
 
