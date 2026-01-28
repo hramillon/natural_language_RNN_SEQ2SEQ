@@ -267,20 +267,70 @@ We now have a model capable of predicting the next word based on the two previou
 
 In this setting, the model’s own predictions are used as input for subsequent steps, allowing the sentence to grow word by word.
 
-However, as observed in practice, a standard RNN struggles to retain information over longer sequences. Its memory of earlier words quickly degrades, which limits the coherence of the generated sentences.
+![perplexity second model](ressources/unkSentences.png)
+
+![a prediction for our bigram](ressources/firstSentences.png)
+
+As observed in this exemple, a standard RNN struggles to retain information over longer sequences. Its memory of earlier words quickly degrades, which limits the coherence of the generated sentences.
 
 To address this limitation, we introduce more advanced architectures with improved memory capabilities, which allow the model to better capture long-range dependencies.
 
 #### LSTM and GRU
 
-**LSTM**
+**LSTM (Long Short Term Memory)**
 
 <img src="https://upload.wikimedia.org/wikipedia/commons/3/3b/The_LSTM_cell.png" width="500" alt="LSTM cell">
 
-it seems complicated,let's exactly see what we have here. On the left the top input $c\_{t-1}$ is the long time memory on the bottom $h\_{t-1}$ is the short time memory, and finaly $x\_t$ is the value we add at time t.
 
-If we start from the left we see that the short term memory and the new wordare mixed in the logisticfunciton (velue between 0 and 1) thus by multipling this output with the long term memory we 
+At first glance, an LSTM cell may look complicated, but it is built from a small number of well-defined components. Let’s go through it step by step, from left to right.
 
-**GRU**
+**inputs :**
+
+- **\( c_{t-1} \)**: the *long-term memory* (cell state) coming from the previous time step  
+- **\( h_{t-1} \)**: the *short-term memory* (hidden state) from the previous time step  
+- **\( x_t \)**: the input at the current time step  
+
+The goal of the LSTM cell is to update the long-term memory $c\_t$ and produce a new short-term memory $h\_t$.
+
+
+**1. Forget Gate**
+
+The first operation combines the previous short-term memory $h\_{t-1}$ with the current input $x\_t$ and passes them through a  logistic function, which outputs values in [0, 1].
+
+This output is multiplied element-wise with the previous long-term memory $c\_{t-1}$ :
+
+- Values close to 0 mean forget this information
+- Values close to 1 mean keep this information
+
+ **2. Input Gate**
+
+Next, the LSTM decides what new information should be added to the long-term memory:
+
+- $h\_{t-1}$ and $x\_t$ are passed through a tanh function to produce candidate values
+- Another logistic gate controls how much of this candidate information is allowed in
+
+The result of this input gate is added to the long-term memory after the forget gate has been applied.  
+At this point, the updated long-term memory $c\_t$ is fully defined.
+
+**3. Output Gate**
+
+Finally, the LSTM produces the new short-term memory $h\_t$:
+
+- The updated long-term memory $c\_t$ is passed through a tanh
+- A sigmoid gate selects which parts of this transformed memory should be exposed as output
+
+This output gate determines what information from the long-term memory is considered important enough to influence the next step (and possibly the final prediction).
+
+This gating mechanism allows LSTMs to model long-range dependencies while avoiding the vanishing gradient problem common in standard RNNs.
+
+**GRU (Gated Recurrent Unit)**
 
 ![GRU cell](https://d2l.ai/_images/gru-3.svg)
+
+Actually this is a simplified LSTM whose the performance seems to be the same.
+
+there is no more short and long memory there is only a memory which merged the two if we compare with a LSTM, this new memory is an activation vector determined by the reset and update gates.
+
+the reset gate determines how much we have to keep from the former state : logistic . hidden state
+
+The update is how much from the new data we have to keep
