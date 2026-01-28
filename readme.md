@@ -323,14 +323,49 @@ This output gate determines what information from the long-term memory is consid
 
 This gating mechanism allows LSTMs to model long-range dependencies while avoiding the vanishing gradient problem common in standard RNNs.
 
-**GRU (Gated Recurrent Unit)**
+**A naive LSTM model**
+
+![GRU cell](ressources/lstmsent.png)
+
+![GRU cell](ressources/lstmsentences.png)
+
+
+we notify a lot of noise in our model, we have to take care of it, in the next model (GRU) I'm gonna download the penn_treebank to take care of it.
+We see that the model still strugle to make sentences. However we see that the model start to see some patterns in grammar.
+
+
+**GRU-Based Sentence Generator**
 
 ![GRU cell](https://d2l.ai/_images/gru-3.svg)
 
-Actually this is a simplified LSTM whose the performance seems to be the same.
+GRU (Gated Recurrent Unit) is a simplified LSTM variant with comparable performance. While LSTM maintains separate short-term and long-term memory, GRU combines them into a single memory mechanism controlled by two gates:
 
-there is no more short and long memory there is only a memory which merged the two if we compare with a LSTM, this new memory is an activation vector determined by the reset and update gates.
+Reset gate: Controls how much of the previous hidden state to retain
+Update gate: Controls how much new information to incorporate
 
-the reset gate determines how much we have to keep from the former state : logistic . hidden state
+**A sentence generato with GRU**
+```
+Input (19 words)
+    ↓
+Embedding (convert indices to 100D vectors)
+    ↓
+GRU 150 (process sequence, keep all timesteps)
+    ↓
+GRU 100 (process sequence, keep only last timestep)
+    ↓
+Dense softmax (predict probability for each word)
+    ↓
+Output (probability for `total_words` words)
 
-The update is how much from the new data we have to keep
+Dropouts (20%) reduce overfitting by randomly disabling neurons.
+```
+
+We built this generator from scratch using a subset of the Penn Treebank dataset with sequences of maximum length 20.
+
+A key improvement over previous LSTM models was addressing tokenizer bias: our earlier tokenizer over-represented frequently-used words while underrepresenting others. This caused the generator to repeat common words excessively. We mitigated this issue by carefully tuning the tokenization process.
+
+The model uses two stacked GRU layers with 20% dropout between them to prevent overfitting.
+
+And the result is pretty good this sentence is almost correct some weird words after 10-15 words the model starts being incoherant but it's a good first generator
+
+![GRU sentences](ressources/sentenceGRU.png)
