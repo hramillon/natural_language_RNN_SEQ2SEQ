@@ -1,59 +1,46 @@
 import numpy as np
-import nltk
 import tensorflow as tf
-from tensorflow import keras
-from nltk.corpus import treebank
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, GRU, Dense, Dropout
+from tensorflow.keras.callbacks import EarlyStopping
+import pickle
 
-nltk.download("treebank")
-sentences = [[w.lower() for w in sent] for sent in treebank.sents()]
+with open('ressources/penn_treebank_subset.txt', 'r', encoding='utf-8') as file:
+    text_data = file.read()
 
-MIN_FREQ = 2
+tokenizer = Tokenizer()
+tokenizer.fit_on_texts([text_data])
+total_words = len(tokenizer.word_index) + 1
 
-keras.backend.clear_session()
-tokenizer = keras.preprocessing.text.Tokenizer(
-    filters="",
-    lower=True,
-    oov_token="<unk>"
-)
+input_sequences = []
+for line in text_data.split('\n'):
+    if line.strip():
+        token_list = tokenizer.texts_to_sequences([line])[0]
+        for i in range(1, len(token_list)):
+            input_sequences.append(token_list[:i+1])
 
-tokenizer.word_index = {"<unk>": 1, "<eos>": 2}
-tokenizer.fit_on_texts([" ".join(s) for s in sentences])
+max_sequence_len = 20
+input_sequences = np.array(pad_sequences(input_sequences, maxlen=max_sequence_len, padding='pre'))
+X, labels = input_sequences[:, :-1], input_sequences[:, -1]
+y = tf.keras.utils.to_categorical(labels, num_classes=total_words)
 
-word_index = tokenizer.word_index
-index_word = {v: k for k, v in word_index.items()}
-
-#context window size
-SEQ_LEN = 10
-
-X, y = [], []
-for sent in sentences:
-    sent_with_eos = sent + ["<eos>"]
-    seq = tokenizer.texts_to_sequences([" ".join(sent_with_eos)])[0]
-    
-    for i in range(len(seq) - SEQ_LEN):
-        X.append(seq[i:i+SEQ_LEN])
-        y.append(seq[i+1:i+SEQ_LEN+1])
-
-X = np.array(X)
-y = np.array(y)
-vocab_size = len(word_index) + 1
-
-print(f"Vocab size: {vocab_size}")
-print(f"Index de <eos>: {word_index.get('<eos>', 'non trouvé')}")
-
-model = keras.Sequential([
-    keras.layers.Embedding(vocab_size, 64),
-    keras.layers.LSTM(128, return_sequences=True, dropout=0.2),
-    keras.layers.LSTM(64, return_sequences=False, dropout=0.2),
-    keras.layers.Dense(128, activation='relu'),
-    keras.layers.Dropout(0.2),
-    keras.layers.Dense(vocab_size)
+model = Sequential([
+    Embedding(total_words, 100, input_length=max_sequence_len-1),
+    Dropout(0.2),
+    GRU(150, return_sequences=True),
+    Dropout(0.2),
+    GRU(100),
+    Dropout(0.2),
+    Dense(total_words, activation='softmax')
 ])
 
-model.compile(
-    optimizer="adam",
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-)
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-model.fit(X, y, epochs=10, batch_size=64)
+early_stop = EarlyStopping(monitor='loss', patience=5, restore_best_weights=True)
+model.fit(X, y, batch_size=128, epochs=100, verbose=1, callbacks=[early_stop], validation_split=0.1)
 
+model.save('models/gru.keras')
+with open('models/tokenizer.pickle', 'wb') as handle:
+    pickle.dump(tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)

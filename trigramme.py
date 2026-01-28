@@ -8,15 +8,14 @@ from nltk.corpus import treebank
 
 sentences = [[w.lower() for w in sent] for sent in treebank.sents()]
 
-X_words = []  # Séquences de 2 mots
-y_words = []  # Le mot suivant
+X_words = []
+y_words = []
 
 for sent in sentences:
     for i in range(len(sent) - 2):  
         X_words.append(sent[i:i+2]) 
         y_words.append(sent[i + 2])   
 
-# Créer le tokenizer avec OOV token
 all_sentences = [" ".join(sent) for sent in sentences]
 tokenizer = keras.preprocessing.text.Tokenizer(oov_token="<unk>")
 tokenizer.fit_on_texts(all_sentences)
