@@ -259,9 +259,9 @@ Better results with a very good perplexity even in test. it's a good news for th
 
 ![a prediction for our trigram](ressources/trigramPred.png)
 
-### Generate sentences, how to remember things in our sentences
+## Generate sentences, how to remember things in our sentences
 
-#### Our First Generated Sentences
+### Our First Generated Sentences
 
 We now have a model capable of predicting the next word based on the two previous words. Using this model, we can generate complete sentences by feeding the RNN with an initial sequence and then repeatedly predicting the next word based on the words it has just generated.
 
@@ -275,9 +275,9 @@ As observed in this exemple, a standard RNN struggles to retain information over
 
 To address this limitation, we introduce more advanced architectures with improved memory capabilities, which allow the model to better capture long-range dependencies.
 
-#### LSTM and GRU
+### LSTM and GRU
 
-**LSTM (Long Short Term Memory)**
+#### LSTM (Long Short Term Memory)
 
 <img src="https://upload.wikimedia.org/wikipedia/commons/3/3b/The_LSTM_cell.png" width="500" alt="LSTM cell">
 
@@ -334,7 +334,7 @@ we notify a lot of noise in our model, we have to take care of it, in the next m
 We see that the model still strugle to make sentences. However we see that the model start to see some patterns in grammar.
 
 
-**GRU-Based Sentence Generator**
+#### GRU-Based Sentence Generator
 
 ![GRU cell](https://d2l.ai/_images/gru-3.svg)
 
@@ -369,3 +369,7 @@ The model uses two stacked GRU layers with 20% dropout between them to prevent o
 And the result is pretty good this sentence is almost correct some weird words after 10-15 words the model starts being incoherant but it's a good first generator
 
 ![GRU sentences](ressources/sentenceGRU.png)
+
+## A translator in Seq2Seq
+
+![perplexity trigram model](ressources/perplexityTrigram.png)
