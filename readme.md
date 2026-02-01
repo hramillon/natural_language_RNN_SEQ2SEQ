@@ -370,6 +370,48 @@ And the result is pretty good this sentence is almost correct some weird words a
 
 ![GRU sentences](ressources/sentenceGRU.png)
 
-## A translator in Seq2Seq
-
 ![perplexity trigram model](ressources/perplexityTrigram.png)
+
+## A Translator with Seq2Seq
+
+### The main idea 
+
+Building on sentence generation, we can now construct a model capable of translating sentences. The goal is to take a sentence as input and produce a translated sentence as output. This is the core concept of Seq2Seq (Sequence-to-Sequence).
+
+![Seq2Seq](https://upload.wikimedia.org/wikipedia/commons/2/24/Seq2seq-training.svg)
+
+As shown in the image, a sequence-to-sequence system consists of two main components:
+
+**Encoder**: Takes an input sequence (e.g., an English sentence) and compresses it into a fixed-size context vector. As the sentence passes through the RNN, the final hidden state captures the semantic meaning of the entire sentence in vector form.
+
+**Decoder**: Uses the context vector from the encoder along with previously predicted words to generate the target language sentence (e.g., French) one word at a time. At each step, it attends to the encoder's output and its own previous predictions to decide what word to generate next.
+
+We enhance the basic Seq2Seq model with several important modifications:
+
+The encoder adds an `<eos>` (end-of-sentence) token at the end of the input sequence, and the decoder begins with a `<start>` token. These markers help the model understand sequence boundaries.
+
+Input sentences are reversed during training. For example, "They are watching ." becomes ". watching are They". This technique helps because the first words of the source sentence are typically more critical for accurate translation, and reversing the input brings them closer to the beginning of the decoder's output generation.
+
+### Our Data
+
+To train our model, we need an important corpus of sentence pairs. We source our data from Tatoeba, an open-source collection of translated sentences. For French-to-English translation, we have access to approximately 495,000 sentence pairs.
+
+However, data preprocessing is crucial. The dataset contains noise, such as duplicate translations of the same sentence. After cleaning and deduplication, we retain 294,000 high-quality sentence pairs.
+
+Simple whitespace tokenization is insufficient because punctuation must be handled separately. For example, "I love my family." and "My family is incredible." should not treat "family" and "family." as different tokens. We implement proper tokenization that separates punctuation from words to ensure consistent vocabulary representation.
+
+Vocabulary Management Since vocabulary size significantly impacts model performance and computational cost, we implement sampled softmax. This technique approximates the full softmax computation by sampling a subset of output classes during training, making the model efficient even with large vocabularies.
+
+### A Naive Seq2Seq (400 Sentences)
+
+Our first model is intentionally naive—we reuse our GRU architecture for both the encoder and decoder. This phase is primarily about demonstrating how to implement a Seq2Seq model rather than achieving strong translation performance.
+
+Until now, we built our model graphs directly within Keras's Sequential API. For Seq2Seq, we transition to the Functional API, which we find more intuitive for connecting components and understanding the overall architecture.
+
+**Results and Limitations**: As expected, this model produces poor translations. We add batch normalization layers between each component to mitigate a common issue where the model defaults to outputting the token "I" repeatedly. Without this regularization, results would be significantly worse. However, the fundamental problem is clear: 400 sentences are simply insufficient to learn meaningful translation patterns. Even humans cannot acquire language competency from such a limited corpus.
+
+### Our first Seq2Seq (20 000 sentences)
+
+### Implementation of attention (50 000 sentences)
+
+### Final model (294 000 sentences)
