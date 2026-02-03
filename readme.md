@@ -402,7 +402,9 @@ Simple whitespace tokenization is insufficient because punctuation must be handl
 
 Vocabulary Management Since vocabulary size significantly impacts model performance and computational cost, we implement sampled softmax. This technique approximates the full softmax computation by sampling a subset of output classes during training, making the model efficient even with large vocabularies.
 
-### A Naive Seq2Seq (400 Sentences)
+### A Naive Seq2Seq
+
+#### How are we going to program our model 
 
 Our first model is intentionally naive—we reuse our GRU architecture for both the encoder and decoder. This phase is primarily about demonstrating how to implement a Seq2Seq model rather than achieving strong translation performance.
 
@@ -410,8 +412,14 @@ Until now, we built our model graphs directly within Keras's Sequential API. For
 
 **Results and Limitations**: As expected, this model produces poor translations. We add batch normalization layers between each component to mitigate a common issue where the model defaults to outputting the token "I" repeatedly. Without this regularization, results would be significantly worse. However, the fundamental problem is clear: 400 sentences are simply insufficient to learn meaningful translation patterns. Even humans cannot acquire language competency from such a limited corpus.
 
-### Our first Seq2Seq (20 000 sentences)
+#### Let's add some  sentences
+
+Now we try to have more sentences (20 000), thanks to that we can decrease the control of the overftting by removing the normalization and and to pass from 50% dropout to 20%.
+
+The loss is clearly better like that with 16 000 sentences on our test, 2000 for our validation set and 2000 for our test set.
 
 ### Implementation of attention (50 000 sentences)
 
 ### Final model (294 000 sentences)
+
+## Bibliographie
