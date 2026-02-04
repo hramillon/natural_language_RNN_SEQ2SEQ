@@ -412,15 +412,23 @@ Until now, we built our model graphs directly within Keras's Sequential API. For
 
 **Results and Limitations**: As expected, this model produces poor translations. We add batch normalization layers between each component to mitigate a common issue where the model defaults to outputting the token "I" repeatedly. Without this regularization, results would be significantly worse. However, the fundamental problem is clear: 400 sentences are simply insufficient to learn meaningful translation patterns. Even humans cannot acquire language competency from such a limited corpus.
 
+With a loss of 5, we can't say it's a good model, but we have foundations.
+
+![trad with I and to](ressources/failSeq2Seq.png)
+
+Once we normalize to prevent an explosion of I and to
+
+![normalization](ressources/seq2seqfail2.png)
+
 #### Let's add some  sentences
 
 Now we try to have more sentences (20 000), thanks to that we can decrease the control of the overftting by removing the normalization and and to pass from 50% dropout to 20%.
 
-The loss is clearly better like that with 16 000 sentences on our test, 2000 for our validation set and 2000 for our test set.
+The loss is clearly better like that with 16 000 sentences on our test, 2000 for our validation set and 2000 for our test set. the validation loss dropped to 3.9. one of the issue is that the model can't understand long sentences, for that we have to add a system of attention, the consequence is sentences are syntaxically correct but the meaning is totally different
+
+![correct syntax](ressources/Seq2Seqbetter.png)
 
 ### Implementation of attention (50 000 sentences)
-
-### Implementation of Attention
 
 #### How Attention Works
 
@@ -443,11 +451,9 @@ We compute the attention scores by taking the dot product between each Query and
 
 $$\text{Attention scores} = \frac{QK^T}{\sqrt{d_k}}$$
 
-where $d_k$ is the dimension of the key vectors. The division by $\sqrt{d_k}$ is crucial for numerical stability.
-
 This produces a matrix where entry (i,j) indicates how much token i should attend to token j.
 
-We divide by $\sqrt{d_k}$ for a reason of stability according to the article.
+We divide by $\sqrt{d_k}$ for a reason of stability according to the article, where $d_k$ is the dimension of the key vectors.
 
 3. Softmax normalization
 
@@ -468,6 +474,16 @@ now let's consider the sentence: "The small blue car is fast."
 When computing the representation of "car," attention will learn to weight "small" and "blue" heavily (they modify "car"), while giving lower weight to "the" or "is." This allows the model to capture the semantic relationship that adjectives modify nouns.
 
 Besides, in practice, models use multiple attention heads in parallel, each learning different types of relationships. This allows the model to simultaneously attend to different parts of the input at different representation levels.
+
+**Results and criticks**
+
+with far more sentences, we start having results even if we need to change our models to compet against the overfitting and with more sentences in the final result.
+
+![Result model](ressources/attentionOverfit.png)
+
+and some translations !!
+
+![our first translations](ressources/tradFirst.png)
 
 ### Final model (294 000 sentences)
 
