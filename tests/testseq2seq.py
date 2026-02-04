@@ -6,7 +6,7 @@ from tensorflow import keras
 # ======================
 # PARAMÈTRES (vérifier qu'ils matchent l'entraînement)
 # ======================
-MODEL_PATH = "models/seq2seq_fr_en.keras"
+MODEL_PATH = "../models/seq2seq_fr_en.keras"
 TOK_FR_PATH = "models/tokenizer_fr.pkl"
 TOK_EN_PATH = "models/tokenizer_en.pkl"
 
