@@ -420,6 +420,55 @@ The loss is clearly better like that with 16 000 sentences on our test, 2000 for
 
 ### Implementation of attention (50 000 sentences)
 
+### Implementation of Attention
+
+#### How Attention Works
+
+Attention has become a crucial component of modern AI, introduced in the landmark paper "Attention Is All You Need" (Vaswani et al., 2017). The core purpose of attention is to provide contextual meaning to each token in a sequence, allowing the model to weigh the importance of surrounding tokens.
+
+The same word can have different semantic meanings depending on context. For example, in "bank transfer" versus "river bank," the word "bank" should have different representations. While traditional token embeddings assign a single fixed vector, attention mechanisms compute context-dependent representations.
+
+1. Query (Q), Key (K), and Value (V) vectors
+
+For each token, we compute three vectors by multiplying the embedding vector with learnable weight matrices:
+- Query vector: $$Q = Embedding \times W_Q$$
+- Key vector: $$K = Embedding \times W_K$$
+- Value vector: $$V = Embedding \times W_V$$
+
+Intuitively, the Query represents what information the word is looking for. The Key represents the information the word contains and the Value represents the information the word should pass on
+
+2. Computing attention weights
+
+We compute the attention scores by taking the dot product between each Query and all Keys:
+
+$$\text{Attention scores} = \frac{QK^T}{\sqrt{d_k}}$$
+
+where $d_k$ is the dimension of the key vectors. The division by $\sqrt{d_k}$ is crucial for numerical stability.
+
+This produces a matrix where entry (i,j) indicates how much token i should attend to token j.
+
+We divide by $\sqrt{d_k}$ for a reason of stability according to the article.
+
+3. Softmax normalization
+
+We apply softmax row-wise to normalize the attention scores into a probability distribution:
+
+$$\text{Attention weights} = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)$$
+
+4. Weighted sum of values
+
+Finally, we compute the output as a weighted sum of the Value vectors:
+
+$$\text{Output} = \text{Attention weights} \times V$$
+
+This gives each token a new representation that incorporates context from all other tokens in the sequence, weighted by their relevance.
+
+now let's consider the sentence: "The small blue car is fast."
+
+When computing the representation of "car," attention will learn to weight "small" and "blue" heavily (they modify "car"), while giving lower weight to "the" or "is." This allows the model to capture the semantic relationship that adjectives modify nouns.
+
+Besides, in practice, models use multiple attention heads in parallel, each learning different types of relationships. This allows the model to simultaneously attend to different parts of the input at different representation levels.
+
 ### Final model (294 000 sentences)
 
 ## Bibliographie
