@@ -57,10 +57,10 @@ model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 )
 
-# Entraînement sans métrique
+#zntraînement sans métrique
 history = model.fit(X_train, y_train, epochs=5, batch_size=64, verbose=1)
 
-# Calculer perplexité correctement (globale)
+# Calculer perplexité
 train_loss = model.evaluate(X_train, y_train, verbose=0)
 test_loss = model.evaluate(X_test, y_test, verbose=0)
 

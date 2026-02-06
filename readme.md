@@ -18,8 +18,9 @@ We start from the fundamentals of the recurrent neural network and progressively
   ii. LSTM and GRU to have more context
 3. **Translation with seq2seq**
   i.Principle of seq2seq
-  ii Our strategy
-  iii our models
+  ii Naive seq2seq
+  iii Implementation of attention
+  iv Final model
 
 ## Word Extension with RNN
 
@@ -428,7 +429,7 @@ The loss is clearly better like that with 16 000 sentences on our test, 2000 for
 
 ![correct syntax](ressources/Seq2Seqbetter.png)
 
-### Implementation of attention (50 000 sentences)
+### Implementation of attention
 
 #### How Attention Works
 
@@ -475,7 +476,7 @@ When computing the representation of "car," attention will learn to weight "smal
 
 Besides, in practice, models use multiple attention heads in parallel, each learning different types of relationships. This allows the model to simultaneously attend to different parts of the input at different representation levels.
 
-**Results and criticks**
+#### Results and critics
 
 with far more sentences, we start having results even if we need to change our models to compet against the overfitting and with more sentences in the final result.
 
@@ -485,6 +486,27 @@ and some translations !!
 
 ![our first translations](ressources/tradFirst.png)
 
-### Final model (294 000 sentences)
+## Final Model
+
+### BPE: Change in Token Management
+
+Until now, we used the approach: 1 token = 1 word. However, this method has major limitations. When the vocabulary reaches 50,000 words, the embedding becomes huge and model training becomes problematic.
+
+To solve this problem, we implemented word tokenization. For example, instead of storing all words separately in singular and plural forms, we keep only the singular and add the token "s". This approach applies to many linguistic patterns. We have a vocabulary reduction from 50,000 to 10,000 words in both languages.
+
+The initial model had a problem: despite vocabulary reduction, the embedding dimension remained problematic. The model couldn't grasp the relative importance of each word, which led to token mixing.
+
+![Imprecise translation examples](ressources/translations.png)
+
+### Applied Optimizations
+
+We made two major adjustments:
+
+- Increase embedding dimension: allow the model to better represent words in high dimension
+- Increase batch size: prevent overfitting, as a more diverse batch promotes better generalization
+
+After 2 hours of training, we obtained a model with a perplexity of 5. The translations are finally correct, not exceptional, but quite respectable for a homemade model built from scratch.
+
+![translation](ressources/traduction2.png)
 
 ## Bibliographie

@@ -50,11 +50,6 @@ X = np.array(X)
 y = np.array(y)
 vocab_size = len(word_index) + 1
 
-print(f"word_index length: {len(word_index)}")
-print(f"vocab_size: {vocab_size}")
-print(f"Index de <eos>: {word_index.get('<eos>')}")
-print(f"Index de <unk>: {word_index.get('<unk>')}")
-
 model = keras.Sequential([
     keras.layers.Embedding(vocab_size, 64),
     keras.layers.LSTM(64, return_sequences=True, dropout=0.4, kernel_regularizer=keras.regularizers.l2(0.001)),

@@ -11,6 +11,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 import re
 import sentencepiece as spm
 
+# gestion des tokens et transformation phrase pour être utilisé par seq2seq
 df = pd.read_csv(
     "ressources/trad_max_cleaned.csv",
     sep="\t",
@@ -79,7 +80,7 @@ y_dec_out_val = X_en_val[:, 1:]
 X_dec_in_test = X_en_test[:, :-1]
 y_dec_out_test = X_en_test[:, 1:]
 
-#on fait en Functional API car donne plus de liberté c'est plus claire pour faire des seq2seq
+#on fait en Functional API car c'est plus claire pour faire des seq2seq
 #Encoder
 enc_inputs = Input(shape=(max_len_fr,), name="encoder_inputs")
 enc_embed = layers.Embedding(vocab_fr, 256, name="encoder_embedding")(enc_inputs)
