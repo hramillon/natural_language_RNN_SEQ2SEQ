@@ -507,6 +507,6 @@ We made two major adjustments:
 
 After 2 hours of training, we obtained a model with a perplexity of 5. The translations are finally correct, not exceptional, but quite respectable for a homemade model built from scratch.
 
-![translation](ressources/traduction2.png)
+![translation](ressources/trad2.png)
 
 ## Bibliographie
