@@ -12,7 +12,7 @@ import re
 import sentencepiece as spm
 
 df = pd.read_csv(
-    "ressources/trad_max.csv",
+    "ressources/trad_max_cleaned.csv",
     sep="\t",
     header=None,
     names=["fr", "ang"]
@@ -86,7 +86,7 @@ enc_embed = layers.Embedding(vocab_fr, 256, name="encoder_embedding")(enc_inputs
 enc_x = layers.Dropout(0.1)(enc_embed)
 
 enc_outputs, enc_state = layers.GRU(
-    128, 
+    256, 
     return_sequences=True, 
     return_state=True,
     name="encoder_gru"
@@ -98,7 +98,7 @@ dec_embed = layers.Embedding(vocab_en, 256, mask_zero=True, name="decoder_embedd
 dec_x = layers.Dropout(0.1)(dec_embed)
 
 dec_x, _ = layers.GRU(
-    128,
+    256,
     return_sequences=True,
     return_state=True,
     name="decoder_gru"
@@ -121,7 +121,7 @@ model.compile(
 )
 
 checkpoint = ModelCheckpoint(
-    'models/final_translation.h5',
+    'models/final_translation2.h5',
     monitor='val_loss',
     save_best_only=True,
     verbose=1

@@ -5,10 +5,10 @@ import sentencepiece as spm
 from tensorflow import keras
 from sklearn.model_selection import train_test_split
 
-model = keras.models.load_model('../models/final_translation.h5')
+model = keras.models.load_model('../models/final_translation2.h5')
 
 df = pd.read_csv(
-    "../ressources/trad_max.csv",
+    "../ressources/trad_max_cleaned.csv",
     sep="\t",
     header=None,
     names=["fr", "ang"]
