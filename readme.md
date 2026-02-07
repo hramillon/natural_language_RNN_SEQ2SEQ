@@ -9,10 +9,10 @@ The final goal is to try to do a simple system of english -> french translation.
 
 We start from the fundamentals of the recurrent neural network and progressively increase complexity :
 
-1. **Word extension with RNN**
+1. **Word embedding with RNN**
   i. Recurrent Neural Network (RNN)
   ii. How to turn words in vectors (Embeddings)
-  iii Word Extension (bigram and trigram...)
+  iii Word embedding (bigram and trigram...)
 2. **Generate sentences, how to remember things in our sentences**
   i. Our first sentences with RNN
   ii. LSTM and GRU to have more context
@@ -66,6 +66,7 @@ Example:
 "pizza" might be represented as [0.1, 0.2, 0.9, ...] (different from "cat")
 
 If we have n dimesions it's for having different features (n actually), for instance "cat", "dog" and "pizza" if we arein a 2-dimensional space the first dimension can be about being alive and the second being eatable, it's oversimplified but it's the idea.
+This idea of dimensions which allow diferentiation between words is explained by Christopher Olah (5)
 
 #### How Embeddings Connect with RNNs
 
@@ -111,9 +112,9 @@ We build a simple model to train embeddings through next-word prediction:
 How it works: The embedding converts tokens to vectors → Flatten concatenates them → Dense predicts the next word.
 During backpropagation, gradients adjust the embedding vectors to predict correctly. Similar words (like "dog" and "cat") develop similar vectors because they appear in similar contexts. After training, we keep only the Embedding layer for reuse.
 
-### Word Extension (Bigrams, Trigrams, ...)
+### Word Embedding (Bigrams, Trigrams, ...)
 
-Let us explain how we build word extension models (also known as *n-gram language models*).
+Let us explain how we build word extension models (also known as n-gram language models).
 
 The main idea is to estimate the probability of the next word given the previous ones.
 
@@ -280,6 +281,8 @@ To address this limitation, we introduce more advanced architectures with improv
 
 #### LSTM (Long Short Term Memory)
 
+LSTM is an old concept ivented in 1997 by S.Hochreiter et J.Schmidhuber (1), the idea is to build a cell which can remember what happened before to predict the future. This cell has a lot of variant until 2015 in the article W.Zaremba et al. (2015) (2).
+
 <img src="https://upload.wikimedia.org/wikipedia/commons/3/3b/The_LSTM_cell.png" width="500" alt="LSTM cell">
 
 
@@ -337,6 +340,8 @@ We see that the model still strugle to make sentences. However we see that the m
 
 #### GRU-Based Sentence Generator
 
+GRU follow the same objective as LSTM but with less gates, K. Cho (3). 
+
 ![GRU cell](https://d2l.ai/_images/gru-3.svg)
 
 GRU (Gated Recurrent Unit) is a simplified LSTM variant with comparable performance. While LSTM maintains separate short-term and long-term memory, GRU combines them into a single memory mechanism controlled by two gates:
@@ -360,6 +365,8 @@ Output (probability for `total_words` words)
 
 Dropouts (20%) reduce overfitting by randomly disabling neurons.
 ```
+
+It appears that GRUs have more or less the same performance as LSTM according to this article *LSTM : A search Space Odyssey* (4), in the future we will use only GRU.
 
 We built this generator from scratch using a subset of the Penn Treebank dataset with sequences of maximum length 20.
 
@@ -405,6 +412,8 @@ Vocabulary Management Since vocabulary size significantly impacts model performa
 
 ### A Naive Seq2Seq
 
+Seq2Seq has been introduce by I.Sutskever in his article Sequence to Sequence Learning with Neural Networks in 2014 (6)
+
 #### How are we going to program our model 
 
 Our first model is intentionally naive—we reuse our GRU architecture for both the encoder and decoder. This phase is primarily about demonstrating how to implement a Seq2Seq model rather than achieving strong translation performance.
@@ -431,9 +440,11 @@ The loss is clearly better like that with 16 000 sentences on our test, 2000 for
 
 ### Implementation of attention
 
+This concept, particularly for translation has been introduced by  D.Bahdanau in (2014) in the article Neural Machine Translation by jointly Learning to Align and Translate (7)
+
 #### How Attention Works
 
-Attention has become a crucial component of modern AI, introduced in the landmark paper "Attention Is All You Need" (Vaswani et al., 2017). The core purpose of attention is to provide contextual meaning to each token in a sequence, allowing the model to weigh the importance of surrounding tokens.
+Attention has become a crucial component of modern AI, introduced in the landmark paper "Attention Is All You Need" (Vaswani et al., 2017) (8). The core purpose of attention is to provide contextual meaning to each token in a sequence, allowing the model to weigh the importance of surrounding tokens.
 
 The same word can have different semantic meanings depending on context. For example, in "bank transfer" versus "river bank," the word "bank" should have different representations. While traditional token embeddings assign a single fixed vector, attention mechanisms compute context-dependent representations.
 
@@ -510,3 +521,24 @@ After 2 hours of training, we obtained a model with a perplexity of 5. The trans
 ![translation](ressources/trad2.png)
 
 ## Bibliographie
+
+### Manuals
+
+- Géron, A. *Machine Learning avec Scikit-Learn*. Dunod.
+- Charniak, E. *Introduction au Deep Learning*. Dunod.
+- Géron, A. *Deep Learning avec TensorFlow*. Dunod.
+
+### Articles 
+
+- (1) *Long Short-Term Memory*, S.Hochreiter et J.Schmidhuber (1997),https://goo.gl/ClvOiH
+- (2) *Recurrent Neural Network Regularization*, W.Zaremba et al. (2015), https://goo.gl/SZ9kzB
+- (3) *Learning Phrase Representations using RNN Encoder - Decoder for Statistical Machine Translation*,K. Cho et al.(2014), https://goo.gl/ZnAEOZ
+- (4) *LSTM : A search Space Odyssey*, https://goo.gl/hZB4KW
+- (5) *Deep Learning, NLP, and Representations*, Christopher Olah, https://goo.gl/5rLNTj
+- (6) *Sequence to Sequence Learning with Neural Networks*, I.Sutskever et al.(2014), https://goo.gl/0g9zWP
+- (7) *Neural Machine Translation by jointly Learning to Align and Translate*, D.Bahdanau et al,(2014), https://goo.gl/8RCous
+- (8) *Attention Is All You Need*, Ashish Vaswani et al, (2017), https://arxiv.org/abs/1706.03762
+
+### Video
+
+- (1) *Attention in transformers, step-by-step | Deep Learning Chapter 6*, 3Blue1Brown, https://youtu.be/eMlx5fFNoYc?si=nW5O0guFsYX2NhFW
